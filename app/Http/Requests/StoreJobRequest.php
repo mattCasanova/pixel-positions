@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
 class StoreJobRequest extends FormRequest
 {
@@ -11,7 +12,7 @@ class StoreJobRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return Auth::check();
     }
 
     /**
@@ -22,7 +23,12 @@ class StoreJobRequest extends FormRequest
     public function rules(): array
     {
         return [
-            //
+            'title' => 'required|string|max:255',
+            'salary' => 'required|string|max:255',
+            'location' => 'required|string|max:255',
+            'schedule' => 'required|string|max:255|in:Full-time,Part-time,Contract,Internship',
+            'url' => 'required|url|max:255',
+            'tags' => 'nullable|string|max:255',
         ];
     }
 }

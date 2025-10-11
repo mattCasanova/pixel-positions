@@ -6,6 +6,8 @@ use App\Http\Requests\StoreJobRequest;
 use App\Http\Requests\UpdateJobRequest;
 use App\Models\Job;
 use App\Models\Tag;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Auth;
 
 class JobController extends Controller
 {
@@ -14,7 +16,7 @@ class JobController extends Controller
      */
     public function index()
     {
-        $jobs = Job::with('employer', 'tags')->get();
+        $jobs = Job::with('employer', 'tags')->latest()->get();
         $featuredJobs = $jobs->filter(fn ($job) => $job->featured);
         $tags = Tag::all();
         return view('jobs.index', [
@@ -29,7 +31,7 @@ class JobController extends Controller
      */
     public function create()
     {
-        //
+        return view('jobs.create');
     }
 
     /**
@@ -37,38 +39,18 @@ class JobController extends Controller
      */
     public function store(StoreJobRequest $request)
     {
-        //
-    }
+        $attributes = $request->validated();
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Job $job)
-    {
-        //
-    }
+        $attributes['featured'] = $request->has('featured');
+        $job = Auth::user()->employer->jobs()->create(Arr::except($attributes, 'tags'));
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Job $job)
-    {
-        //
-    }
+        if ($request->filled('tags')) {
+            $tagNames = array_map('trim', explode(',', $attributes['tags']));
+            foreach ($tagNames as $name) {
+                $job->attachTag($name);
+            }
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateJobRequest $request, Job $job)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Job $job)
-    {
-        //
+        return redirect('/')->with('success', 'Job posted successfully!');
     }
 }
